@@ -9,36 +9,39 @@ library(htmlwidgets)
 # load organizations csv  
 geo_data <- read_csv("geo_all.csv") 
 
-# create table of codes for map definition
-codes <- table(geo_data$codes) %>% 
-  as.data.frame()
-
 # create list of codes for legend and filter 
 codes_list <- c('Animal-Related',
                 'Arts, Culture and Humanities', 	
                 'Civil Rights, Social Action, Advocacy',
-                'Community Improvement, Capacity Building',
-                'Crime, Legal-Related',
-                'Diseases, Disorders, Medical Disciplines',
-                'Educational Institutions and Related Activities',
-                'Employment, Job-Related',
-                'Environmental Quality, Protection and Beautification',
-                'Food, Agriculture and Nutrition',
-                'Health - General and Rehabilitative',
-                'Housing, Shelter',
-                'Human Services - Multipurpose and Other',
-                'International, Foreign Affairs and National Security',
-                'Medical Research',
-                'Mental Health, Crisis Intervention',
                 'Mutual/Membership Benefit Organizations, Other',
-                'Philanthropy, Voluntarism and Grantmaking Foundations',
-                'Public Safety, Disaster Preparedness and Relief',
-                'Public, Society Benefit - Multipurpose and Other',
                 'Recreation, Sports, Leisure, Athletics',
                 'Religion-Related, Spiritual Development',
-                'Science and Technology Research Institutes, Services',
+                
+                'Diseases, Disorders, Medical Disciplines',
+                'Health - General and Rehabilitative',
+                'Human Services - Multipurpose and Other',
+                'Medical Research',
+                'Mental Health, Crisis Intervention',
                 'Social Science Research Institutes, Services',
+                
+                'Crime, Legal-Related',
+                'International, Foreign Affairs and National Security',
+                'Public Safety, Disaster Preparedness and Relief',
+                
+                'Educational Institutions and Related Activities',
                 'Youth Development',
+                
+                'Community Improvement, Capacity Building',
+                'Housing, Shelter',
+                'Public, Society Benefit - Multipurpose and Other',
+                
+                'Environmental Quality, Protection and Beautification',
+                'Food, Agriculture and Nutrition',
+                'Science and Technology Research Institutes, Services',
+                
+                'Employment, Job-Related',
+                'Philanthropy, Voluntarism and Grantmaking Foundations',
+                
                 'Unknown')
 
 groupslist <- c('Arts and Culture',
@@ -49,6 +52,63 @@ groupslist <- c('Arts and Culture',
                 'Sustainability',
                 'Workforce and Economic Development',
                 'Unknown')
+
+# define lists of rollup groups
+AC_list <- c('Animal-Related',
+             'Arts, Culture and Humanities', 	
+             'Civil Rights, Social Action, Advocacy',
+             'Mutual/Membership Benefit Organizations, Other',
+             'Recreation, Sports, Leisure, Athletics',
+             'Religion-Related, Spiritual Development')
+
+CFH_list <- c('Diseases, Disorders, Medical Disciplines',
+              'Health - General and Rehabilitative',
+              'Human Services - Multipurpose and Other',
+              'Medical Research',
+              'Mental Health, Crisis Intervention',
+              'Social Science Research Institutes, Services')
+
+CS_list <- c('Crime, Legal-Related',
+             'International, Foreign Affairs and National Security',
+             'Public Safety, Disaster Preparedness and Relief')
+
+EY_list <- c('Educational Institutions and Related Activities',
+             'Youth Development')
+
+HCD_list <- c('Community Improvement, Capacity Building',
+              'Housing, Shelter',
+              'Public, Society Benefit - Multipurpose and Other')
+
+S_list <- c('Environmental Quality, Protection and Beautification',
+            'Food, Agriculture and Nutrition',
+            'Science and Technology Research Institutes, Services')
+
+WED_list <- c('Employment, Job-Related',
+              'Philanthropy, Voluntarism and Grantmaking Foundations')
+
+# add variable for rollup group to geo data
+geo_data <- geo_data %>% 
+  mutate(group = ifelse(codes %in% AC_list, 'Arts and Culture',
+                        
+                 ifelse(codes %in% CFH_list, 'Children and Family Health', 
+                        
+                 ifelse(codes %in% CS_list, 'Crime and Safety', 
+                        
+                 ifelse(codes %in% EY_list, 'Education and Youth', 
+                        
+                 ifelse(codes %in% HCD_list, 'Housing and Community Development',
+                        
+                 ifelse(codes %in% S_list, 'Sustainability',
+                        
+                 ifelse(codes %in% WED_list, 'Workforce and Economic Development',
+                        
+                 'Unknown'
+                 ))))))))
+
+# create table of codes for map definition
+codes <- table(geo_data$codes) %>% 
+  as.data.frame()
+
 
 # define colors for each group
 AC <-  "#008080"   # Teal - Arts and Culture
@@ -62,16 +122,15 @@ U <- "#000000"     # Black - Unknown
 
 # define palette for circle markers
 pal <- colorFactor(c(rep(AC, 6),
-                     rep(CFH, 3),
+                     rep(CFH, 6),
                      rep(CS, 3),
                      rep(EY, 2),
-                     rep(HCD, 4),
+                     rep(HCD, 3),
                      rep(S, 3),
                      rep(WED, 2),
                      U), domain= codes_list)
 
-# define palette for circle markers -- one color for all 
-pal <- colorFactor(rep('blue', 26), domain = codes_list)
+#pal <- colorFactor(c(AC, CFH, CS, EY, HCD, S, WED, U), domain= groupslist)
 
 # map definition ---------------------------------------------------------
 
@@ -102,49 +161,49 @@ map <- leaflet(data = geo_data, options = leafletOptions(minZoom = 11, maxZoom =
 # add legend to bottom left of map
 addLegend(
   position = 'bottomleft',
-  colors = 'AC',
+  colors = AC,
   group = 'Arts and Culture',
   labels = 'Arts and Culture')  %>%
   
   addLegend(
     position = 'bottomleft',
-    colors = 'CFH',
+    colors = CFH,
     group = 'Children and Family Health',
     labels = 'Children and Family Health')  %>%
   
   addLegend(
     position = 'bottomleft',
-    colors = 'CS',
+    colors = CS,
     group = 'Crime and Safety',
     labels = 'Crime and Safety')  %>%
   
   addLegend(
     position = 'bottomleft',
-    colors = 'EY',
+    colors = EY,
     group = 'Education and Youth',
     labels = 'Education and Youth')  %>%
   
   addLegend(
     position = 'bottomleft',
-    colors = 'HCD',
+    colors = HCD,
     group = 'Housing and Community Development',
     labels = 'Housing and Community Development')  %>%
   
   addLegend(
     position = 'bottomleft',
-    colors = 'S',
+    colors = S,
     group = 'Sustainability',
     labels = 'Sustainability')  %>%
   
   addLegend(
     position = 'bottomleft',
-    colors = 'WED',
+    colors = WED,
     group = 'Workforce and Economic Development',
     labels = 'Workforce and Economic Development')  %>%
   
   addLegend(
     position = 'bottomleft',
-    colors = 'U',
+    colors = U,
     group = 'Unknown',
     labels = 'Unknown')  %>%
   
