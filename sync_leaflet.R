@@ -1,13 +1,70 @@
 library(tidyverse)
 library(leaflet)
+library(leaflet.extras)
 library(htmlwidgets)
-
+library(igraph)
 
 # data manipulation & prep ------------------------------------------------
 
 
 # load organizations csv  
 geo_data <- read_csv("geo_all.csv") 
+
+# define lists of rollup groups
+AC_list <- c('Animal-Related',
+             'Arts, Culture and Humanities', 	
+             'Civil Rights, Social Action, Advocacy',
+             'Mutual/Membership Benefit Organizations, Other',
+             'Recreation, Sports, Leisure, Athletics',
+             'Religion-Related, Spiritual Development')
+
+CFH_list <- c('Diseases, Disorders, Medical Disciplines',
+              'Health - General and Rehabilitative',
+              'Human Services - Multipurpose and Other',
+              'Medical Research',
+              'Mental Health, Crisis Intervention',
+              'Social Science Research Institutes, Services')
+
+CS_list <- c('Crime, Legal-Related',
+             'International, Foreign Affairs and National Security',
+             'Public Safety, Disaster Preparedness and Relief')
+
+EY_list <- c('Educational Institutions and Related Activities',
+             'Youth Development')
+
+HCD_list <- c('Community Improvement, Capacity Building',
+              'Housing, Shelter',
+              'Public, Society Benefit - Multipurpose and Other')
+
+S_list <- c('Environmental Quality, Protection and Beautification',
+            'Food, Agriculture and Nutrition',
+            'Science and Technology Research Institutes, Services')
+
+WED_list <- c('Employment, Job-Related',
+              'Philanthropy, Voluntarism and Grantmaking Foundations')
+
+# add variable for rollup group to geo data
+geo_data <- geo_data %>% 
+  mutate(group = ifelse(codes %in% AC_list, 'Arts and Culture',
+                        
+                 ifelse(codes %in% CFH_list, 'Children and Family Health', 
+                               
+                 ifelse(codes %in% CS_list, 'Crime and Safety', 
+                                      
+                 ifelse(codes %in% EY_list, 'Education and Youth', 
+                                             
+                 ifelse(codes %in% HCD_list, 'Housing and Community Development',
+                                                    
+                 ifelse(codes %in% S_list, 'Sustainability',
+                                                           
+                 ifelse(codes %in% WED_list, 'Workforce and Economic Development',
+                                                                  
+                 'Unknown'
+         ))))))))
+
+# create table of codes for map definition
+codes <- table(geo_data$codes) %>% 
+  
 
 # create table of codes for map definition
 codes <- table(geo_data$codes) %>% 
@@ -41,13 +98,6 @@ codes_list <- c('Animal-Related',
                 'Youth Development',
                 'Unknown')
 
-# define colors for each group
-AR <-"#ff0000"  # Red - Animal-Related
-ACH <-  "#008080"  # Teal - Arts, Culture, and Humanities
-U <- "#000000"  # Black - Unknown
-
-# define palette for circle markers
-#pal <- colorFactor(c(AR, ACH, U), domain= codes_list)
 
 # define palette for circle markers -- one color for all 
 pal <- colorFactor(rep('blue', 26), domain = codes_list)
@@ -70,35 +120,19 @@ map <- leaflet(data = geo_data, options = leafletOptions(minZoom = 11, maxZoom =
   # set default view to downtown Baltimore
   setView(lng= -76.62, lat=39.29,zoom=12) %>% 
   
-  # add legend to bottom right of map
-  # addLegend(
-  #   title="Tax-Exempt Organizations in Baltimore",
-  #   position = 'bottomright',
-  #   #colors = c(AR,ACH, U),
-  #   colors = rep('blue', 26),
-  #   labels = codes_list)  %>%
-  
-# add legend to bottom left of map
-addLegend(
-  position = 'bottomleft',
-  #colors = c(AR,ACH, U),
-  colors = 'blue',
-  group = 'Animal-Related',
-  labels = 'Animal-Related')  %>%
-  
-  
   ## Animal-Related group
   addCircleMarkers(data=geo_data[geo_data$codes == 'Animal-Related',],~lon, ~lat, stroke=FALSE,
-                 radius = ~log(ASSET_AMT + 100), fillOpacity = .5, color = ~pal(codes), #color defined above
-                 #create pop-up window with information for each marker
-                 popup = ~ paste(NAME, "<br/>",
-                                 "Address:", STREET,"<br/>",
-                                 "Assets:", ASSET_AMT, "<br/>",
-                                 "Income:", INCOME_AMT, "<br/>",
-                                 "Revenue:", REVENUE_AMT, "<br/>",
-                                 "Category:", codes),
-                 
-                 group="Animal-Related") %>% 
+                   radius = ~log(ASSET_AMT + 100), fillOpacity = .5, color = ~pal(codes), #color defined above
+                   #create pop-up window with information for each marker
+                   popup = ~ paste(NAME, "<br/>",
+                                   "Address:", STREET,"<br/>",
+                                   "Assets:", ASSET_AMT, "<br/>",
+                                   "Income:", INCOME_AMT, "<br/>",
+                                   "Revenue:", REVENUE_AMT, "<br/>",
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
+                   
+                   group="Animal-Related") %>% 
   
   ## Arts, Culture, & Humanities group
   addCircleMarkers(data=geo_data[geo_data$codes == 'Arts, Culture and Humanities',],~lon, ~lat, stroke=FALSE, 
@@ -109,7 +143,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Arts, Culture and Humanities") %>% 
   
@@ -122,7 +157,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Civil Rights, Social Action, Advocacy") %>% 
   
@@ -135,7 +171,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Community Improvement, Capacity Building") %>% 
   
@@ -148,7 +185,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Crime, Legal-Related") %>% 
   
@@ -161,7 +199,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Diseases, Disorders, Medical Disciplines") %>% 
   
@@ -174,7 +213,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Educational Institutions and Related Activities") %>% 
   
@@ -187,7 +227,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Employment, Job-Related") %>% 
   
@@ -200,7 +241,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Environmental Quality, Protection and Beautification") %>% 
   
@@ -213,7 +255,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Food, Agriculture and Nutrition") %>% 
   
@@ -226,7 +269,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Health - General and Rehabilitative") %>% 
   
@@ -239,7 +283,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Housing, Shelter") %>% 
   
@@ -252,7 +297,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Human Services - Multipurpose and Other") %>% 
   
@@ -265,7 +311,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="International, Foreign Affairs and National Security") %>% 
   
@@ -278,7 +325,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Medical Research") %>% 
   
@@ -291,7 +339,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Mental Health, Crisis Intervention") %>%
   
@@ -304,7 +353,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Mutual/Membership Benefit Organizations, Other") %>%
   
@@ -317,7 +367,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Philanthropy, Voluntarism and Grantmaking Foundations") %>%
   
@@ -330,7 +381,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Public Safety, Disaster Preparedness and Relief") %>%
   
@@ -343,7 +395,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Public, Society Benefit - Multipurpose and Other") %>%
   
@@ -356,7 +409,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Recreation, Sports, Leisure, Athletics") %>%
   
@@ -369,7 +423,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Religion-Related, Spiritual Development") %>%
   
@@ -382,7 +437,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Science and Technology Research Institutes, Services") %>%
   
@@ -395,7 +451,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Social Science Research Institutes, Services") %>%
   
@@ -408,7 +465,8 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Youth Development") %>%
   
@@ -421,10 +479,11 @@ addLegend(
                                    "Assets:", ASSET_AMT, "<br/>",
                                    "Income:", INCOME_AMT, "<br/>",
                                    "Revenue:", REVENUE_AMT, "<br/>",
-                                   "Category:", codes),
+                                   "Category:", codes, "<br/>",
+                                   "Grouping:", group),
                    
                    group="Unknown") %>% 
-
+  
   # Add user controls to toggle groups displayed
   addLayersControl(
     baseGroups = c('Color', 'Grayscale', 'Dark'),
@@ -432,9 +491,17 @@ addLegend(
     options = layersControlOptions(collapsed = TRUE)
   ) %>% 
   
+  # Add search feature
+  addSearchFeatures(targetGroups = 'Animal-Related',
+                                   options = searchFeaturesOptions(zoom = 14,
+                                                                   openPopup = TRUE,
+                                                                   firstTipSubmit = TRUE,
+                                                                   autoCollapse = TRUE,
+                                                                   hideMarkerOnCollapse = TRUE)) %>% 
+  
   # Hide all groups by default 
   hideGroup(codes_list)
-  
+
 map
 
 # map export --------------------------------------------------------------
@@ -443,16 +510,3 @@ map
 # save map as html document 
 sav.file <- "/Users/jbjrV/OneDrive/Code for Baltimore/index.html"
 saveWidget(map, file=sav.file, selfcontained = F)
-
-# notebook ----------------------------------------------------------------
-
-# # Baltimore Neighborhood Indicators
-# Housing and Community Development
-# Children and Family Health
-# Crime and Safety
-# Workforce and Economic Development
-# Sustainability
-# Education and Youth
-# Arts and Culture
-
-# change groups added in markers to rollup groups and add legend for each rollup group with different colors 
