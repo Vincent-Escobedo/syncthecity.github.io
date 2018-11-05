@@ -491,8 +491,11 @@ map <- leaflet(data = geo_data, options = leafletOptions(minZoom = 11, maxZoom =
     options = layersControlOptions(collapsed = TRUE)
   ) %>% 
   
+  # Add map reset button
+  addResetMapButton() %>% 
+  
   # Add search feature
-  addSearchFeatures(targetGroups = 'Animal-Related',
+  addSearchFeatures(targetGroups = codes_list,
                                    options = searchFeaturesOptions(zoom = 14,
                                                                    openPopup = TRUE,
                                                                    firstTipSubmit = TRUE,
