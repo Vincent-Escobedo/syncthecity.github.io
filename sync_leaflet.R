@@ -3,6 +3,7 @@ library(leaflet)
 library(leaflet.extras)
 library(htmlwidgets)
 library(igraph)
+library(sp)
 
 # data manipulation & prep ------------------------------------------------
 
@@ -64,10 +65,6 @@ geo_data <- geo_data %>%
 
 # create table of codes for map definition
 codes <- table(geo_data$codes) %>% 
-  
-
-# create table of codes for map definition
-codes <- table(geo_data$codes) %>% 
   as.data.frame()
 
 # create list of codes for legend and filter 
@@ -101,6 +98,35 @@ codes_list <- c('Animal-Related',
 
 # define palette for circle markers -- one color for all 
 pal <- colorFactor(rep('blue', 26), domain = codes_list)
+
+
+# network definition ------------------------------------------------------
+
+# define connections (edges) between organizations -- from and to
+edges <- geo_data %>% 
+  mutate(from = NAME) %>% 
+  # randomly select an organization node for each organization to work with 
+  mutate(to = sample(geo_data$NAME, 3550, replace = TRUE)) %>% 
+  select('from', 'to')
+
+vertices <- geo_data %>% 
+  select('NAME', 'lon', 'lat')
+
+vertices_u <- vertices %>% 
+  unique() 
+
+g <- graph.data.frame(edges, directed = FALSE, vertices = vertices)
+
+data <- edges %>% 
+  select('from', 'to')
+
+v <- unique(c(data[,1], data[,2])) #Define v from both columns in data
+v <- na.omit(v)
+e <- na.omit(data)
+
+
+g <- graph.data.frame(e, directed = FALSE)
+plot(g, vertex.label = NA, vertex.size = 3)
 
 # map definition ---------------------------------------------------------
 
