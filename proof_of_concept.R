@@ -11,9 +11,6 @@ library(scales)
 # load organizations csv  
 geo_data <- read_csv("geo_all.csv") 
 
-# define palette for circle markers -- one color for all 
-pal <- colorFactor(rep('blue', 26), domain = codes_list)
-
 
 # network definition ------------------------------------------------------
 
@@ -21,7 +18,7 @@ pal <- colorFactor(rep('blue', 26), domain = codes_list)
 # map definition ---------------------------------------------------------
 
 
-map <- leaflet(data = geo_data, options = leafletOptions(minZoom = 11, maxZoom = 18)) %>%
+map <- leaflet(data = geo_data, options = leafletOptions(minZoom = 11, maxZoom = 18, preferCanvas = TRUE)) %>%
   
   addProviderTiles(providers$OpenStreetMap.BlackAndWhite, group = 'Grayscale') %>% 
   addTiles(group = 'Color') %>% 
@@ -50,17 +47,18 @@ map <- leaflet(data = geo_data, options = leafletOptions(minZoom = 11, maxZoom =
              data = geo_data,
              ~lon,
              ~lat,
-             popup = ~ paste(NAME, "<br/>",
-                             "Address:", STREET, "<br/>",
-                             "Assets:", scales::comma(ASSET_AMT), "<br/>",
-                             "Income:", scales::comma(INCOME_AMT), "<br/>",
-                             "Revenue:", scales::comma(REVENUE_AMT), "<br/>",
-                             "Category:", codes),
+             popup = ~ paste(NAME, '<br/>',
+                             '<strong>Address:</strong>', STREET, '<br/>',
+                             '<strong>Assets:</strong>', scales::comma(ASSET_AMT), '<br/>',
+                             '<strong>Income:</strong>', scales::comma(INCOME_AMT), '<br/>',
+                             '<strong>Revenue:</strong>', scales::comma(REVENUE_AMT), '<br/>',
+                             '<strong>Category:</strong>', codes),
              group="circles") %>% 
                                                                                                    
 
   addResetMapButton() %>% 
   
+  # search doesn't work with clustered points, use regular markers 1px by 1px for search
   addMarkers(data = geo_data, ~lon, ~lat, label = geo_data$NAME, group = 'blanks', 
              icon = makeIcon( 
                iconUrl = "http://leafletjs.com/examples/custom-icons/leaf-green.png",
@@ -74,13 +72,19 @@ map <- leaflet(data = geo_data, options = leafletOptions(minZoom = 11, maxZoom =
                                                     hideMarkerOnCollapse = FALSE)) %>% 
   
   
-  # Add user controls to toggle groups displayed
+  # Add user controls to toggle map tiles displayed
   addLayersControl(
   baseGroups = c('Grayscale', 'Color'),
   options = layersControlOptions(collapsed = TRUE)
   ) %>%    
   
-  addControl("<P><B>Hint!</B><br> Search for your organization with the magnifying glass button.</P>",
+  addControl('<P>
+             <strong>
+             Hint!
+             </strong>
+             <br>
+             Search for your organization with the magnifying glass button.
+             </P>',
              position='bottomright')
    
 
@@ -90,5 +94,5 @@ map
 
 
 # save map as html document 
-sav.file <- "/Users/jbjrV/OneDrive/Code for Baltimore/index.html"
+sav.file <- '/Users/jbjrV/OneDrive/syncthecity.github.io/index.html'
 saveWidget(map, file=sav.file, selfcontained = F)
