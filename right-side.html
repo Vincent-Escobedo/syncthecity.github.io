@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+    <title>Sync the City</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="main.css"/>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <h1> Filter By: </h1>
+    <div class="container">
+		<div class="dropdown">
+			<button onclick="getTypes()" class="dropbtn">Type</button>
+			<div id="type" class="dropdown-content">
+				<a href="nonprofit">Non-Profit</a>
+		    	<a href="profit">For Profit</a>
+		    	<a href="funder">Funder</a>
+		    	<a href="govt">Government</a>
+			</div>
+		</div>
+		<div class="dropdown">
+			<button onclick="getCategories()" class="dropbtn">Category</button>
+			<div id="category" class="dropdown-content">
+				<a href="arts">Arts</a>
+		    	<a href="housing">Housing</a>
+		    	<a href="edu">Education</a>
+		    	<a href="legal">Legal Aid</a>
+			</div>
+		</div>
+		<div class="dropdown">
+			<button onclick="getZIPS()" class="dropbtn">ZIP</button>
+			<div id="zip" class="dropdown-content">
+				<a href="21201">21201</a>
+		    	<a href="21202">21202</a>
+		    	<a href="21205">21205</a>
+		    	<a href="21206">21206</a>
+		    	<a href="21209">21209</a>
+		    	<a href="21210">21210</a>
+		    	<a href="21211">21211</a>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript" src="jquery.tokeninput.js"></script>
+<link rel="stylesheet" type="text/css" href="token-input.css" />
+
+<script type="text/javascript">
+$(document).ready(function () {
+    $("#searchbar").tokenInput("/url_to_your_search_endpoint");
+});
+</script>		
+	<p> Results: </p>
+</body>
+</html>   
+
+<script>
+/* When the user clicks on the button, 
+toggle between hiding and showing the dropdown content */
+function getTypes() {
+  document.getElementById("type").classList.toggle("show");
+}
+
+function getCategories() {
+  document.getElementById("category").classList.toggle("show");
+}
+
+function getZIPS() {
+  document.getElementById("zip").classList.toggle("show");
+}
+
+// Close the dropdown menu if the user clicks outside of it
+window.onclick = function(event) {
+  if (!event.target.matches('.dropbtn')) {
+    var dropdowns = document.getElementsByClassName("dropdown-content");
+    var i;
+    for (i = 0; i < dropdowns.length; i++) {
+      var openDropdown = dropdowns[i];
+      if (openDropdown.classList.contains('show')) {
+        openDropdown.classList.remove('show');
+      }
+    }
+  }
+}
+</script>                 
